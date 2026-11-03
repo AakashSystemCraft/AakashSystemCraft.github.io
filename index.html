@@ -1,0 +1,802 @@
+<title>Aakash SystemCraft</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Custom ERP, inventory with barcode scanning, order-to-dispatch tracking and MIS dashboards for Indian businesses. Built on Google Workspace. Zero monthly fees.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: shop-floor control room — dark scanner hero, light ledger body, one live inventory console as the centrepiece */
+:root{
+  --bg:#F6F8FB; --surface:#FFFFFF; --sunk:#E8ECF2; --ink:#0D1828; --muted:#566275; --line:#D7DDE6;
+  --accent:#1546C9; --accent-ink:#FFFFFF; --accent-soft:#E3EAFB;
+  --signal:#F2A900;
+  --ok:#17894B; --ok-soft:#DDF1E5; --warn:#B87700; --warn-soft:#FBEFD3; --crit:#C9301F; --crit-soft:#F9E0DC;
+  --hero:#FFFFFF; --hero-2:#F5F8FC; --hero-ink:#0D1828; --hero-muted:#566275; --hero-line:#DCE3EE; color-scheme:light;
+  --display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:#FFFFFF}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.band{padding-block:clamp(56px,8vw,104px)}
+h1,h2,h3{font-family:var(--display);font-stretch:85%;line-height:1.05;letter-spacing:-.01em;text-wrap:balance;margin:0}
+h2{font-size:clamp(30px,4.4vw,48px);font-weight:800}
+h3{font-size:21px;font-weight:700;font-stretch:95%}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.lede{color:var(--muted);font-size:18px;max-width:62ch}
+.sec-head{display:grid;gap:14px;margin-bottom:44px;max-width:760px}
+:focus-visible{outline:3px solid var(--signal);outline-offset:2px;border-radius:4px}
+.btn{display:inline-flex;align-items:center;gap:10px;font:600 15px/1 var(--body);padding:15px 22px;border-radius:8px;border:1.5px solid transparent;text-decoration:none;cursor:pointer;transition:transform .15s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--signal);color:#16110A}
+.btn-primary:hover{background:#FFBA1A}
+.btn-ghost{border-color:#B9C6DA;color:var(--hero-ink);background:transparent}
+.btn-ghost:hover{background:var(--hero-2)}
+.btn-accent{background:var(--accent);color:var(--accent-ink)}
+.num{font-variant-numeric:tabular-nums}
+
+/* NAV */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:color-mix(in srgb,#FFFFFF 92%,transparent);box-shadow:0 1px 0 #0D18280A;backdrop-filter:blur(10px);border-bottom:1px solid var(--hero-line);color:var(--hero-ink)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--display);font-weight:800;font-size:20px;font-stretch:80%;letter-spacing:.01em}
+.brand-mark{display:flex;gap:2px;height:22px;align-items:stretch}
+.brand-mark i{display:block;background:var(--accent)}
+.nav-links{display:flex;gap:26px;font-size:14px;color:var(--hero-muted)}
+.nav-links a{text-decoration:none}.nav-links a:hover{color:var(--hero-ink)}
+.nav .btn{padding:11px 16px;font-size:14px}
+@media (max-width:900px){.nav-links{display:none}}
+
+/* HERO */
+.hero{background:linear-gradient(180deg,#FFFFFF 0%,#EEF3FB 100%);border-bottom:1px solid var(--line);color:var(--hero-ink);position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--hero-line) 1px,transparent 1px),linear-gradient(90deg,var(--hero-line) 1px,transparent 1px);background-size:44px 44px;opacity:.6;mask-image:radial-gradient(ellipse at 70% 40%,#000 0%,transparent 70%)}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center;padding-block:clamp(56px,8vw,96px)}
+.hero h1{font-size:clamp(44px,7vw,84px);font-weight:900;font-stretch:72%;line-height:.95}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero .lede{color:var(--hero-muted);margin-top:22px}
+.hero-ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.hero-proof{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:30px;font-family:var(--mono);font-size:13px;color:var(--hero-muted)}
+.hero-proof span::before{content:"✓ ";color:var(--signal)}
+@media (max-width:900px){.hero .wrap{grid-template-columns:1fr}}
+
+.scanner{background:var(--surface);border:1px solid var(--hero-line);border-radius:14px;padding:22px;box-shadow:0 30px 60px -30px #1546C940}
+.scanner-top{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:12px;color:var(--hero-muted)}
+.live-dot{display:inline-flex;align-items:center;gap:7px}
+.live-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:#3DDC84;box-shadow:0 0 0 0 #3DDC8466;animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px #3DDC8400}}
+.barcode-box{position:relative;margin:18px 0 8px;background:#F5F7FA;border:1px solid var(--line);border-radius:8px;padding:18px 18px 10px;overflow:hidden}
+.bars{display:flex;height:74px;gap:0;align-items:stretch}
+.bars i{display:block;background:#0D1828}
+.barcode-num{font-family:var(--mono);color:#0D1828;font-size:13px;letter-spacing:.3em;text-align:center;margin-top:6px}
+.laser{position:absolute;left:8px;right:8px;height:2px;background:#FF3B30;box-shadow:0 0 12px 2px #FF3B30AA;top:20px;animation:laser 2.4s ease-in-out infinite}
+@keyframes laser{50%{top:86px}}
+.scan-log{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px;font-size:13.5px}
+.scan-log li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--hero-line);border-radius:8px;background:var(--hero-2)}
+.scan-log li.new{animation:slidein .4s ease}
+@keyframes slidein{from{opacity:.2;transform:translateY(-6px)}}
+.tag{font-family:var(--mono);font-size:11px;font-weight:600;padding:3px 7px;border-radius:4px;letter-spacing:.04em}
+.tag.in{background:var(--ok-soft);color:var(--ok)}.tag.out{background:var(--accent-soft);color:var(--accent)}.tag.alert{background:var(--crit-soft);color:var(--crit)}
+.scan-log .q{font-family:var(--mono);color:var(--hero-muted)}
+
+/* STATS */
+.stats{background:var(--surface);border-bottom:1px solid var(--line)}
+.stats .wrap{display:grid;grid-template-columns:repeat(4,1fr);padding-block:28px}
+.stat{padding:6px 22px;border-left:1px solid var(--line)}
+.stat:first-child{border-left:0;padding-left:0}
+.stat b{display:block;font-family:var(--display);font-stretch:75%;font-size:40px;font-weight:800;line-height:1}
+.stat span{color:var(--muted);font-size:14px}
+@media (max-width:760px){.stats .wrap{grid-template-columns:1fr 1fr;row-gap:22px}.stat:nth-child(3){border-left:0;padding-left:0}}
+
+/* SLIDER */
+.slider{position:relative}
+.viewport{overflow:hidden;border-radius:16px;border:1px solid var(--line);background:var(--surface);touch-action:pan-y}
+.track{display:flex;transition:transform .6s cubic-bezier(.65,0,.25,1)}
+.slide{flex:0 0 100%;display:grid;grid-template-columns:1fr 1fr;min-width:0}
+.slide-text{padding:clamp(24px,4vw,48px);display:flex;flex-direction:column;gap:16px;min-width:0}
+.slide-code{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.1em}
+.slide h3{font-size:clamp(28px,3.4vw,40px);font-weight:800;font-stretch:80%}
+.slide .pain{color:var(--muted)}
+.slide ul{margin:0;padding:0;list-style:none;display:grid;gap:9px}
+.slide li{display:flex;gap:10px;font-size:15px}
+.slide li::before{content:"";flex:0 0 8px;height:8px;margin-top:8px;background:var(--accent);border-radius:2px}
+.slide a.more{margin-top:auto;font-weight:600;color:var(--accent);text-decoration:none}
+.slide a.more:hover{text-decoration:underline}
+.slide-vis{background:var(--sunk);border-left:1px solid var(--line);padding:clamp(20px,3vw,36px);display:flex;align-items:center;min-width:0}
+.screen{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;font-size:13px;display:grid;gap:10px}
+.screen-h{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.meter{height:6px;background:var(--sunk);border-radius:3px;overflow:hidden;margin-top:5px}
+.meter i{display:block;height:100%;border-radius:3px}
+.pill{font-family:var(--mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.crit{background:var(--crit-soft);color:var(--crit)}.pill.info{background:var(--accent-soft);color:var(--accent)}
+.slider-ctrl{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:18px}
+.dots{display:flex;gap:8px;flex-wrap:wrap}
+.dots button{border:0;background:var(--line);height:6px;width:28px;border-radius:3px;cursor:pointer;padding:0;transition:background .2s,width .2s}
+.dots button[aria-current="true"]{background:var(--accent);width:48px}
+.arrows{display:flex;gap:8px}
+.arrows button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:18px}
+.arrows button:hover{border-color:var(--accent);color:var(--accent)}
+@media (max-width:820px){.slide{grid-template-columns:1fr}.slide-vis{border-left:0;border-top:1px solid var(--line)}}
+
+/* DEMO CONSOLE */
+.demo{background:var(--sunk);border-block:1px solid var(--line)}
+.console{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.console-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--muted);flex-wrap:wrap}
+.console-bar .demo-badge{background:var(--warn-soft);color:var(--warn);padding:3px 8px;border-radius:4px;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}
+.kpi{padding:18px 20px;border-left:1px solid var(--line)}
+.kpi:first-child{border-left:0}
+.kpi small{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.kpi b{display:block;font-family:var(--display);font-stretch:75%;font-size:32px;font-weight:800;line-height:1.1;margin-top:4px}
+.kpi.alertk b{color:var(--crit)}
+@media (max-width:760px){.kpis{grid-template-columns:1fr 1fr}.kpi:nth-child(3){border-left:0}.kpi:nth-child(n+3){border-top:1px solid var(--line)}}
+.console-body{display:grid;grid-template-columns:340px 1fr}
+@media (max-width:980px){.console-body{grid-template-columns:1fr}}
+.scan-panel{padding:20px;border-right:1px solid var(--line);display:grid;gap:16px;align-content:start}
+@media (max-width:980px){.scan-panel{border-right:0;border-bottom:1px solid var(--line)}}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--sunk);border-radius:8px;padding:4px}
+.seg button{border:0;background:transparent;color:var(--muted);font:600 14px var(--body);padding:10px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px #0002}
+label.fl{display:grid;gap:6px;font-size:13px;font-weight:600}
+.inp{width:100%;font:500 15px var(--mono);padding:12px 14px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.inp:focus{outline:none;border-color:var(--accent)}
+.scan-row{display:grid;grid-template-columns:1fr 84px;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:500 12px var(--mono);border:1px dashed var(--line);background:transparent;color:var(--muted);padding:6px 8px;border-radius:6px;cursor:pointer}
+.chips button:hover{border-color:var(--accent);color:var(--accent)}
+.flash{font-size:14px;padding:10px 12px;border-radius:8px;min-height:44px}
+.flash.ok{background:var(--ok-soft);color:var(--ok)}.flash.err{background:var(--crit-soft);color:var(--crit)}.flash.idle{background:var(--sunk);color:var(--muted)}
+.hint{font-size:13px;color:var(--muted)}
+.inv-wrap{overflow-x:auto;min-width:0}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:620px}
+th{text-align:left;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:12px 16px;border-bottom:1px solid var(--line)}
+td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.flashrow td{animation:rowflash 1.2s ease}
+@keyframes rowflash{0%{background:var(--accent-soft)}}
+td .sku{font-family:var(--mono);font-size:12px;color:var(--muted)}
+td.stockc{width:190px}
+.stock-line{display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px}
+.console-foot{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
+@media (max-width:760px){.console-foot{grid-template-columns:1fr}}
+.feed{padding:18px 20px;min-width:0}
+.feed + .feed{border-left:1px solid var(--line)}
+@media (max-width:760px){.feed + .feed{border-left:0;border-top:1px solid var(--line)}}
+.feed h4{margin:0 0 10px;font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.feed ol{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:200px;overflow:auto}
+.feed li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px}
+.feed time{font-family:var(--mono);font-size:12px;color:var(--muted);flex:0 0 auto;padding-top:1px}
+
+/* PROBLEMS */
+.ba{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ba div{background:var(--surface);padding:26px;display:grid;gap:10px;align-content:start}
+.ba .before{font-size:14px;color:var(--crit);font-family:var(--mono)}
+.ba .before::before{content:"✕ "}
+.ba .after{font-weight:600}
+.ba .after::before{content:"→ ";color:var(--ok)}
+@media (max-width:860px){.ba{grid-template-columns:1fr}}
+
+/* MODULES */
+.mods{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.mod{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:26px;display:grid;gap:12px;align-content:start}
+.mod .code{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:4px 8px;border-radius:4px;justify-self:start}
+.mod p{color:var(--muted);font-size:15px}
+@media (max-width:900px){.mods{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.mods{grid-template-columns:1fr}}
+
+/* PROCESS */
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;counter-reset:s;border-top:2px solid var(--ink)}
+.step{padding:22px 18px 0 0;display:grid;gap:8px;align-content:start}
+.step::before{counter-increment:s;content:"STEP " counter(s);font:600 12px var(--mono);letter-spacing:.1em;color:var(--accent)}
+.step p{color:var(--muted);font-size:14.5px}
+.step .dur{font-family:var(--mono);font-size:12px;color:var(--ink)}
+@media (max-width:900px){.steps{grid-template-columns:1fr 1fr;row-gap:24px}}
+@media (max-width:520px){.steps{grid-template-columns:1fr}}
+
+/* WORK */
+.work{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.wgroup{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px}
+.wgroup h3{margin-bottom:14px}
+.wlinks{display:flex;flex-wrap:wrap;gap:8px}
+.wlinks a{font-size:14px;text-decoration:none;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.wlinks a:hover{border-color:var(--accent);color:var(--accent)}
+.wlinks a::after{content:" ↗";color:var(--muted)}
+@media (max-width:760px){.work{grid-template-columns:1fr}}
+
+/* INDUSTRIES */
+.inds{display:flex;flex-wrap:wrap;gap:10px}
+.inds span{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:20px;padding:12px 18px;border:1.5px solid var(--ink);border-radius:999px}
+
+/* PLANS */
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:start}
+.plan{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;display:grid;gap:16px}
+.plan.pick{border:2px solid var(--accent);position:relative}
+.plan.pick::before{content:"Most chosen";position:absolute;top:-12px;left:24px;background:var(--accent);color:var(--accent-ink);font:600 11px var(--mono);padding:4px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:.08em}
+.plan .for{color:var(--muted);font-size:14px}
+.plan ul{margin:0;padding:0;list-style:none;display:grid;gap:8px;font-size:15px}
+.plan li::before{content:"✓  ";color:var(--ok);font-weight:700}
+.plan .time{font-family:var(--mono);font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+@media (max-width:900px){.plans{grid-template-columns:1fr}}
+
+/* FAQ */
+.faq{display:grid;gap:10px;max-width:860px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:0 22px}
+summary{cursor:pointer;font-weight:600;padding:18px 0;list-style:none;display:flex;justify-content:space-between;gap:16px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--mono);color:var(--accent);font-size:20px;line-height:1}
+details[open] summary::after{content:"–"}
+details p{padding-bottom:18px;color:var(--muted)}
+
+/* CONTACT */
+.contact{background:var(--accent-soft);color:var(--hero-ink);border-top:1px solid var(--line)}
+.contact .wrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px}
+@media (max-width:900px){.contact .wrap{grid-template-columns:1fr}}
+.contact h2{font-stretch:75%;font-size:clamp(36px,5vw,60px)}
+.contact .lede{color:var(--hero-muted);margin-top:18px}
+.contact-list{display:grid;gap:14px;margin-top:30px}
+.cl{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1px solid var(--hero-line);border-radius:10px;background:var(--surface)}
+.cl small{display:block;font-family:var(--mono);font-size:11px;color:var(--hero-muted);text-transform:uppercase;letter-spacing:.08em}
+.cl b{font-family:var(--mono);font-size:17px;user-select:all}
+.copy{border:1px solid var(--hero-line);background:transparent;color:var(--hero-ink);padding:8px 12px;border-radius:6px;cursor:pointer;font:500 13px var(--body)}
+.socials{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.socials a{font-size:14px;color:var(--hero-muted);text-decoration:none;padding:8px 12px;border:1px solid #C5D2E6;border-radius:6px;background:var(--surface)}
+.socials a:hover{color:var(--hero-ink)}
+form.lead{background:var(--surface);color:var(--ink);border-radius:16px;border:1px solid var(--line);box-shadow:0 20px 50px -30px #1546C955;padding:clamp(22px,3vw,34px);display:grid;gap:16px}
+form.lead h3{font-size:26px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:560px){.f2{grid-template-columns:1fr}}
+.needs{display:flex;flex-wrap:wrap;gap:8px}
+.needs label{display:flex;align-items:center;gap:7px;font-size:14px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;cursor:pointer}
+.needs input{accent-color:var(--accent)}
+.needs label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+textarea.inp{font-family:var(--body);resize:vertical;min-height:80px}
+.form-out{font-size:14px;padding:12px 14px;border-radius:8px;background:var(--ok-soft);color:var(--ok)}
+.form-out a{font-weight:700}
+.err-msg{color:var(--crit);font-size:13px}
+
+/* SHOWCASE (from sheet) */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+.gcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;text-decoration:none;display:grid;transition:transform .15s,border-color .15s}
+.gcard:hover{transform:translateY(-2px);border-color:var(--accent)}
+.gthumb{position:relative;aspect-ratio:16/9;max-width:100%;background:var(--sunk);display:grid;place-items:center;overflow:hidden}
+.gthumb img{width:100%;height:100%;object-fit:cover}
+.gthumb .ph{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:28px;color:var(--muted)}
+.play{position:absolute;width:56px;height:56px;border-radius:50%;background:#0D1828CC;display:grid;place-items:center}
+.play::after{content:"";border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}
+.gbody{padding:16px 18px;display:grid;gap:6px}
+.gbody b{font-size:16px}
+.gbody p{font-size:14px;color:var(--muted)}
+.gbody .pill{justify-self:start}
+footer{background:#0D1828;color:var(--hero-muted);border-top:1px solid var(--hero-line);font-size:14px}
+footer .wrap{color:#B7C2D3;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-block:26px}
+
+.wa-float{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;align-items:center;gap:8px;background:#1FA855;color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:13px 18px;border-radius:999px;box-shadow:0 10px 30px -8px #0008}
+.wa-float svg{width:20px;height:20px}
+@media (max-width:520px){.wa-float span{display:none}.wa-float{padding:14px}}
+</style>
+
+<nav class="nav" aria-label="Main">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><i style="width:3px"></i><i style="width:1px"></i><i style="width:4px"></i><i style="width:1px"></i><i style="width:2px"></i></span>Aakash SystemCraft</a>
+    <div class="nav-links">
+      <a href="#systems">Systems</a><a href="#demo">Live Demo</a><a href="#process">Process</a><a href="#work">Portfolio</a><a href="#plans">Plans</a><a href="#faq">FAQ</a>
+    </div>
+    <a class="btn btn-primary" href="#contact">Free Demo Book Karo</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Freelance business automation · since 2018</p>
+      <h1 style="margin-top:16px">Aapka business,<br><em>autopilot</em> pe.</h1>
+      <p class="lede">Barcode scan karo, stock apne aap update. Order se dispatch tak har step tracked. Stock 20% se neeche gaya to alert turant phone par. Main ek independent automation consultant hoon. 20+ businesses ke liye custom ERP bana chuka hoon, aapke rules par, SAP se kaafi kam cost mein, zero monthly fees.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="#contact">Free 30-min Demo Book Karo →</a>
+        <a class="btn btn-ghost" href="#demo">Live Barcode Demo Try Karo</a>
+      </div>
+      <div class="hero-proof"><span>20+ clients served</span><span>30+ live apps built</span><span>No monthly fees</span><span>Works on phone</span><span>Hindi/English training</span></div>
+    </div>
+    <div class="scanner" aria-label="Live scanning illustration">
+      <div class="scanner-top"><span class="live-dot">SCANNER · GODOWN 1</span><span id="clock" class="num">--:--</span></div>
+      <div class="barcode-box">
+        <div class="bars" id="heroBars" aria-hidden="true"></div>
+        <div class="barcode-num" id="heroCode">8901234500011</div>
+        <div class="laser" aria-hidden="true"></div>
+      </div>
+      <ul class="scan-log" id="heroLog"></ul>
+    </div>
+  </div>
+</header>
+
+<section class="stats" aria-label="Highlights">
+  <div class="wrap">
+    <div class="stat"><b class="num">2018</b><span>se automation bana rahe hain</span></div>
+    <div class="stat"><b class="num">30+</b><span>live apps, dashboards &amp; forms</span></div>
+    <div class="stat"><b class="num">₹0</b><span>monthly fees, one-time build</span></div>
+    <div class="stat"><b class="num">20+</b><span>businesses served</span></div>
+  </div>
+</section>
+
+<section class="band" id="systems">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The systems</p>
+      <h2>Six modules. One connected business.</h2>
+      <p class="lede">Ek-ek module lagao ya pura ERP. Sab Google Sheets par chalta hai, isliye data hamesha aapka, aapke Drive mein.</p>
+    </div>
+    <div class="slider" id="slider" aria-roledescription="carousel" aria-label="ERP modules">
+      <div class="viewport" id="viewport"><div class="track" id="track"></div></div>
+      <div class="slider-ctrl">
+        <div class="dots" id="dots" role="tablist" aria-label="Choose module"></div>
+        <div class="arrows">
+          <button type="button" id="prev" aria-label="Previous module">←</button>
+          <button type="button" id="next" aria-label="Next module">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band demo" id="demo">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Try it yourself</p>
+      <h2>Scan a barcode. Watch the stock move.</h2>
+      <p class="lede">Ye wahi logic hai jo hamare clients ke godown mein chalta hai. Neeche sample barcode par click karo, ya USB scanner laga ke scan karo. Stock 20% danger zone mein gaya to reorder alert apne aap banega.</p>
+    </div>
+
+    <div class="console">
+      <div class="console-bar"><span>IMS · Stock Console · Godown 1</span><span class="demo-badge">DEMO DATA</span></div>
+      <div class="kpis">
+        <div class="kpi"><small>Products</small><b class="num" id="kSku">0</b></div>
+        <div class="kpi"><small>Stock value</small><b class="num" id="kVal">₹0</b></div>
+        <div class="kpi alertk"><small>Reorder alerts</small><b class="num" id="kAlert">0</b></div>
+        <div class="kpi"><small>Scans today</small><b class="num" id="kMov">0</b></div>
+      </div>
+      <div class="console-body">
+        <div class="scan-panel">
+          <div class="seg" role="group" aria-label="Entry type">
+            <button type="button" id="mIn" aria-pressed="true">Stock IN (Receive)</button>
+            <button type="button" id="mOut" aria-pressed="false">Stock OUT (Dispatch)</button>
+          </div>
+          <form id="scanForm" class="scan-row" autocomplete="off">
+            <label class="fl" for="code">Barcode
+              <input class="inp" id="code" inputmode="numeric" placeholder="Scan ya type karo…">
+            </label>
+            <label class="fl" for="qty">Qty
+              <input class="inp num" id="qty" type="number" min="1" value="10">
+            </label>
+          </form>
+          <div>
+            <p class="hint" style="margin-bottom:8px">Sample barcodes (click = scan):</p>
+            <div class="chips" id="chips"></div>
+          </div>
+          <div class="flash idle" id="flash" role="status">Scanner ready. Barcode scan karo ya upar chip dabao.</div>
+          <p class="hint">Real setup mein ₹1,500–2,500 ka USB/Bluetooth scanner ya mobile camera se scan hota hai. Entry seedhe Google Sheet mein jaati hai.</p>
+          <button type="button" class="btn btn-accent" id="reset" style="justify-self:start;padding:10px 14px;font-size:13px">Demo reset karo</button>
+        </div>
+        <div class="inv-wrap">
+          <table>
+            <thead><tr><th>Product</th><th>Stock level</th><th>Status</th><th style="text-align:right">Value</th></tr></thead>
+            <tbody id="inv"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="console-foot">
+        <div class="feed"><h4>Alerts (owner ke WhatsApp par jaate hain)</h4><ol id="alerts"></ol></div>
+        <div class="feed"><h4>Movement log</h4><ol id="moves"></ol></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Before vs after</p>
+      <h2>Jo problems har owner roz face karta hai.</h2>
+    </div>
+    <div class="ba">
+      <div><p class="before">Stock ka pata godown jaake chalta hai</p><p class="after">Live stock phone par, har SKU ka</p></div>
+      <div><p class="before">Maal khatam hone par order yaad aata hai</p><p class="after">20% par auto reorder alert</p></div>
+      <div><p class="before">Order kis stage par hai, koi nahi jaanta</p><p class="after">Order → dispatch har step ka TAT</p></div>
+      <div><p class="before">Staff ka kaam follow-up se hota hai</p><p class="after">Auto task handover + delay alert</p></div>
+      <div><p class="before">Excel mein entry ki galtiyan</p><p class="after">Barcode scan, zero manual typing</p></div>
+      <div><p class="before">Month-end tak profit ka andaaza nahi</p><p class="after">Daily sales &amp; profit dashboard</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">What you get</p>
+      <h2>Har module, aapke process ke hisaab se.</h2>
+    </div>
+    <div class="mods">
+      <div class="mod"><span class="code">IMS</span><h3>Inventory &amp; Barcode</h3><p>Barcode/QR label printing, scan-based IN/OUT, godown-wise stock, minimum stock levels, auto reorder alerts at 20% danger zone.</p></div>
+      <div class="mod"><span class="code">PO</span><h3>Purchase &amp; Receiving</h3><p>Requirement se PO, supplier-wise balance, material receiving against PO, pending PO follow-up list.</p></div>
+      <div class="mod"><span class="code">O2D</span><h3>Order to Dispatch</h3><p>Order entry form, SO number auto, packing, dispatch qty, pending orders, customer-wise history and TAT per step.</p></div>
+      <div class="mod"><span class="code">FMS</span><h3>Flow &amp; Delegation</h3><p>Sales → Purchase → Accounts task handover, delegation sheet, overdue alerts, daily pending-task list per person.</p></div>
+      <div class="mod"><span class="code">MIS</span><h3>Dashboards</h3><p>Sales, stock, collections and profit on one screen. Mobile-friendly, auto-refreshed, Power BI on request.</p></div>
+      <div class="mod"><span class="code">HR</span><h3>Team &amp; Scorecards</h3><p>New joiner/exit forms, attendance, leave cover, staff performance scorecard so accountability is automatic.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band demo" id="process">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">How we work</p>
+      <h2>Call se go-live tak, 5 steps.</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><h3>Free demo call</h3><p>Aapka business, current process aur pain points samjhte hain.</p><span class="dur">30 min · free</span></div>
+      <div class="step"><h3>Process mapping</h3><p>Order se dispatch tak har step aur har person ka role likhte hain.</p><span class="dur">1–2 days</span></div>
+      <div class="step"><h3>Build</h3><p>Sheets, forms, scanner screens, dashboards aur alerts banate hain.</p><span class="dur">7–21 days</span></div>
+      <div class="step"><h3>Training &amp; go-live</h3><p>Staff ko Hindi mein training. Purana data import.</p><span class="dur">2–3 days</span></div>
+      <div class="step"><h3>Support</h3><p>Changes, naye reports, aur problem aaye to turant fix.</p><span class="dur">Ongoing</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="work">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Portfolio</p>
+      <h2>Live systems. Khud khol ke dekho.</h2>
+      <p class="lede">Ye sab working apps hain jo real businesses mein use ho rahe hain ya demo ke liye bane hain.</p>
+    </div>
+    <div class="work" id="workGroups">
+      <div class="wgroup"><h3>Inventory &amp; Purchase</h3><div class="wlinks">
+        <a href="https://script.google.com/macros/s/AKfycbz3naZPuGx5xMQz4Pxs1Yz4NG6d3VHrjQtIHMaZ6FFokDUvLUZ18RTptZ3Zaoqxaw_O3Q/exec" target="_blank" rel="noopener">Master ERP (IMS)</a>
+        <a href="https://script.google.com/macros/s/AKfycbxIP-zh4XJyIjal1ydyHGdntqW1NUIjSXF0gZwZob_65XoAyfLt4iK_e1jQ4yRZL0XyTg/exec" target="_blank" rel="noopener">Master IMS</a>
+        <a href="https://script.google.com/macros/s/AKfycbwuL061h1AOJeNfcgifcGa-26_O9CrQCdjBb8A4VLEcUVbnZ7kSNDG1hvgYqGOwBrGJEQ/exec" target="_blank" rel="noopener">Inventory Software</a>
+        <a href="https://script.google.com/macros/s/AKfycbxFOGDkily-vf8I6Q5pMskZ0Mbl2kw5QbTSZEDE4iAA0du_4B0EvtnmRvkTGfZ9AkRM/exec" target="_blank" rel="noopener">Material Receiving</a>
+        <a href="https://script.google.com/macros/s/AKfycbyocbF8nj-vOM1otMVrEeIwZ4M-Zi2m2hQaWsknSlLv2hHxzPFdZgB3u_MsYOpGdmNx/exec?page=po_management" target="_blank" rel="noopener">PO Management</a>
+        <a href="https://script.google.com/macros/s/AKfycbyN63_Cuzke7mEONWA9izAnH4wLbxcOx1P-GIyP_-Yh5LM2ZtlDeO2Q5D_eZWRnnx7LNA/exec" target="_blank" rel="noopener">Requirement</a>
+        <a href="https://script.google.com/macros/s/AKfycbxAteHxl2LhAkhSUCiv6cMzIdSgEePhkz3akbuMRX32yuKeKAdR_9TjyErFU8S1dzJmew/exec" target="_blank" rel="noopener">Add Product</a>
+      </div></div>
+      <div class="wgroup"><h3>Sales &amp; Orders</h3><div class="wlinks">
+        <a href="https://script.google.com/macros/s/AKfycbwHrvJLiBzUoLuOgWpDdQRDyjil0wZo2OEFDQ__8YoDZhxjS3vDnxw1eQFX64lXTvVwaw/exec?page=order_form" target="_blank" rel="noopener">Order Entry</a>
+        <a href="https://script.google.com/macros/s/AKfycbzd0qB3LkNe0i-GhmcTQ5IJ5c-E7LLs1exfDxvkjd7VI_0Zd4me2KsN_avE5p2DM1UBTQ/exec" target="_blank" rel="noopener">Sales System</a>
+        <a href="https://script.google.com/macros/s/AKfycbxvZOiXHNANKHEWjx25glaM1Qid84aXYmtSaagtyTtS8gwHAX-bK0FOa4_XOTzwYyAC/exec" target="_blank" rel="noopener">Sales Admin</a>
+        <a href="https://script.google.com/macros/s/AKfycbwdg9QsymMYYrJ4gOjoccB16AXYobybunztloAEORT6E3HRtPkBvXB83QlrBf6sINTDBw/exec" target="_blank" rel="noopener">Sales Tracking</a>
+        <a href="https://www.appsheet.com/start/740d51d4-d6e6-4710-87bf-6b75582250a4?platform=desktop#appName=aakashapp-138827931&amp;view=SALES%20APP%20TRACKING" target="_blank" rel="noopener">Sales Tracking App (AppSheet)</a>
+        <a href="https://sites.google.com/view/sales-autopilot/home" target="_blank" rel="noopener">Sales Autopilot</a>
+        <a href="https://sites.google.com/view/busines-growth/home" target="_blank" rel="noopener">Production Autopilot</a>
+      </div></div>
+      <div class="wgroup"><h3>Dashboards, Tasks &amp; HR</h3><div class="wlinks">
+        <a href="https://script.google.com/macros/s/AKfycbxDK5JoBsA08PNvPTDwec5ipBrThMPHsnaM3hJVC63NWo_6xxLu8e2JzDj65EYa3z-a/exec" target="_blank" rel="noopener">PMS Admin Dashboard</a>
+        <a href="https://script.google.com/macros/s/AKfycbzOIIzviaY3p1dsf5BZKPie8xskcbia39B-s0jd1DQh8QiWrpgF3KZOHhxwIkgx1hq6/exec?page=userdashboard" target="_blank" rel="noopener">User Dashboard</a>
+        <a href="https://script.google.com/macros/s/AKfycbxMWuT3yAo-uGpPS6WMCuRjefhXW6A6piPCds_-fPCQLJIep126grbLv7gPZm0g5bTJpw/exec" target="_blank" rel="noopener">Pending Tasks</a>
+        <a href="https://script.google.com/macros/s/AKfycbzTrDDPMmDimI4Lat5gjHyBQHAS4eMxOAD8BC0PCQgU2rN5gwPIiqAsPsBiAjdhWLSL/exec" target="_blank" rel="noopener">New Joiner</a>
+        <a href="https://script.google.com/macros/s/AKfycbys4ftf1k-DWOdOF-WGWvRVlw5LT7auZJhCmTHdplo-lk1CBqQz7tafHzVkaAM5GJhz/exec?page=exit" target="_blank" rel="noopener">Employee Exit</a>
+        <a href="https://script.google.com/macros/s/AKfycbxsCMIS5Twy1nwePrBHEtcqjfwh4suH6yD7cjhrUeimV4vWsKMvqLtNkIWSghbQyaaHVA/exec" target="_blank" rel="noopener">WhatsApp Sender</a>
+        <a href="https://script.google.com/macros/s/AKfycbxaNj2qle6I9ekGvNnDdnHvEvNS2b2VqvHJfQGWS-KkLz-W8U8AUFoZvT16iOjgeL00/exec" target="_blank" rel="noopener">Aakash ERP</a>
+      </div></div>
+      <div class="wgroup"><h3>Websites &amp; Marketplaces</h3><div class="wlinks">
+        <a href="https://script.google.com/macros/s/AKfycbwWMgpcCRGbo13uU6E-uKpLnyM9zDlItFA8YHNHKdGhl2mVWwdMlv56TYAk74nrqovuFw/exec?page=business&id=client1" target="_blank" rel="noopener">Business</a>
+        <a href="https://script.google.com/macros/s/AKfycbwWMgpcCRGbo13uU6E-uKpLnyM9zDlItFA8YHNHKdGhl2mVWwdMlv56TYAk74nrqovuFw/exec?page=ecommerce&id=client1" target="_blank" rel="noopener">E-commerce</a>
+        <a href="https://script.google.com/macros/s/AKfycbwWMgpcCRGbo13uU6E-uKpLnyM9zDlItFA8YHNHKdGhl2mVWwdMlv56TYAk74nrqovuFw/exec?page=restaurant&id=client1" target="_blank" rel="noopener">Restaurant</a>
+        <a href="https://script.google.com/macros/s/AKfycbwWMgpcCRGbo13uU6E-uKpLnyM9zDlItFA8YHNHKdGhl2mVWwdMlv56TYAk74nrqovuFw/exec?page=realestate&id=client1" target="_blank" rel="noopener">Real Estate</a>
+        <a href="https://script.google.com/macros/s/AKfycbwWMgpcCRGbo13uU6E-uKpLnyM9zDlItFA8YHNHKdGhl2mVWwdMlv56TYAk74nrqovuFw/exec?page=wedding&id=client1" target="_blank" rel="noopener">Wedding</a>
+        <a href="https://script.google.com/macros/s/AKfycbwWMgpcCRGbo13uU6E-uKpLnyM9zDlItFA8YHNHKdGhl2mVWwdMlv56TYAk74nrqovuFw/exec?page=event&id=client1" target="_blank" rel="noopener">Event</a>
+        <a href="https://script.google.com/macros/s/AKfycbwWMgpcCRGbo13uU6E-uKpLnyM9zDlItFA8YHNHKdGhl2mVWwdMlv56TYAk74nrqovuFw/exec?page=resume&id=client1" target="_blank" rel="noopener">Resume</a>
+        <a href="https://script.google.com/macros/s/AKfycbwWMgpcCRGbo13uU6E-uKpLnyM9zDlItFA8YHNHKdGhl2mVWwdMlv56TYAk74nrqovuFw/exec?page=log&id=client1" target="_blank" rel="noopener">Logistics</a>
+        <a href="https://aakashsystemcraftspecialist.github.io/Businessautomationexpert/" target="_blank" rel="noopener">Automation Expert Site</a>
+        <a href="https://business-autopilot.netlify.app/" target="_blank" rel="noopener">Business Autopilot Site</a>
+        <a href="https://script.google.com/macros/s/AKfycbwBctLhQlytd11Y5Iq6k83WBI-vYGcMA5kk-lL87mGhuwLAyPAfJCiSwAPVQ5gfGnm-/exec" target="_blank" rel="noopener">Bechlo Supplier</a>
+        <a href="https://script.google.com/macros/s/AKfycbwBctLhQlytd11Y5Iq6k83WBI-vYGcMA5kk-lL87mGhuwLAyPAfJCiSwAPVQ5gfGnm-/exec?page=customer" target="_blank" rel="noopener">Bechlo Customer</a>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="showcase" style="padding-top:0" hidden>
+  <div class="wrap">
+    <div class="sec-head"><p class="eyebrow">Showcase</p><h2>Videos &amp; screenshots</h2><p class="lede">Systems ko kaam karte hue dekho.</p></div>
+    <div class="gallery" id="gallery"></div>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><p class="eyebrow">Who it's for</p><h2>Jahan maal aata hai, jaata hai, aur hisaab chahiye.</h2></div>
+    <div class="inds"><span>Manufacturers</span><span>Traders &amp; Distributors</span><span>Wholesalers</span><span>Godown &amp; Warehouses</span><span>Retail Chains</span><span>Textile &amp; Garments</span><span>Electrical &amp; Hardware</span><span>FMCG &amp; Packaging</span><span>Service Teams</span></div>
+  </div>
+</section>
+
+<section class="band demo" id="plans">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Plans</p>
+      <h2>One-time build. No monthly fees.</h2>
+      <p class="lede">Final price aapke process aur modules par depend karta hai. Demo call ke 24 ghante mein fixed quote milega.</p>
+    </div>
+    <div class="plans">
+      <div class="plan"><h3>Starter</h3><p class="for">Chhote shop ya godown ke liye</p>
+        <ul><li>Inventory with barcode scan</li><li>Stock IN / OUT forms</li><li>Low-stock alerts</li><li>Basic stock dashboard</li><li>1 month support</li></ul>
+        <p class="time">Live in ~7 days</p><a class="btn btn-accent" href="#contact">Quote lo</a></div>
+      <div class="plan pick"><h3>Growth</h3><p class="for">Trading &amp; distribution businesses</p>
+        <ul><li>Everything in Starter</li><li>Order to Dispatch tracking</li><li>Purchase &amp; PO receiving</li><li>WhatsApp alerts to owner</li><li>Sales &amp; stock MIS dashboard</li><li>3 months support</li></ul>
+        <p class="time">Live in ~14 days</p><a class="btn btn-accent" href="#contact">Quote lo</a></div>
+      <div class="plan"><h3>Full ERP</h3><p class="for">Manufacturing &amp; multi-team companies</p>
+        <ul><li>Everything in Growth</li><li>Production &amp; wastage tracking</li><li>FMS + delegation system</li><li>HR, attendance &amp; scorecards</li><li>Power BI reports</li><li>6 months support</li></ul>
+        <p class="time">Live in ~21 days</p><a class="btn btn-accent" href="#contact">Quote lo</a></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="faq">
+  <div class="wrap">
+    <div class="sec-head"><p class="eyebrow">FAQ</p><h2>Sawaal jo log pehle poochte hain.</h2></div>
+    <div class="faq">
+      <details><summary>Aap company ho ya freelancer?</summary><p>Main independent freelancer hoon. 2018 se 20+ businesses ke liye systems bana chuka hoon. Aap seedha mujhse baat karte ho, koi middleman nahi, isliye kaam fast hota hai aur cost kam rehti hai.</p></details>
+      <details><summary>Kya mujhe koi software ya server kharidna padega?</summary><p>Nahi. System aapke apne Google account (Sheets, Forms, Apps Script) par chalta hai. Koi server, koi monthly fee nahi. Data aapke Drive mein rehta hai.</p></details>
+      <details><summary>Barcode scanner kaunsa chahiye?</summary><p>Koi bhi USB ya Bluetooth barcode scanner chalega (₹1,500–2,500 range). Mobile camera se bhi scan ho sakta hai. Barcode labels hum system se hi print karwa dete hain.</p></details>
+      <details><summary>Staff ko computer nahi aata, chalega?</summary><p>Haan. Screens simple rakhte hain, bade buttons, Hindi labels agar chahiye. Training hum khud dete hain aur short video bhi banake dete hain.</p></details>
+      <details><summary>Mera purana Excel data kya hoga?</summary><p>Purana stock, customer aur product data import kar dete hain, taaki day one se system ready ho.</p></details>
+      <details><summary>Baad mein change chahiye to?</summary><p>Support period mein chhote changes free. Naye modules ya bade changes alag quote par, kabhi bhi add ho sakte hain.</p></details>
+      <details><summary>Data safe hai?</summary><p>Data aapke Google account mein hai, Google ki security ke saath. Har user ko sirf utna access milta hai jitna uske kaam ke liye chahiye.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="band contact" id="contact">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Free demo</p>
+      <h2 style="margin-top:14px">30 minute ki call. Aapka process, aapka system.</h2>
+      <p class="lede">Form bharo, WhatsApp par seedhi baat hogi. Demo mein aapke business ke hisaab se live system dikhayenge.</p>
+      <div class="contact-list">
+        <div class="cl"><div><small>Call / WhatsApp</small><b>+91 89298 31248</b></div><button class="copy" type="button" data-copy="+918929831248">Copy</button></div>
+        <div class="cl"><div><small>Aakash Verma</small><b style="font-family:var(--body);font-size:15px">Freelance Automation Consultant · Delhi NCR</b></div></div>
+      </div>
+      <div class="socials">
+        <a href="https://systemcraft-specialist.blogspot.com/" target="_blank" rel="noopener">Blog ↗</a>
+        <a href="https://docs.google.com/presentation/d/1VLU5iOx3RiVAoph0fIUPGPIC74gaIDHx_peSZjRw3jA/present?slide=id.g2f8c9338f3f_0_0" target="_blank" rel="noopener">Company PPT ↗</a>
+        <a href="https://www.linkedin.com/feed/update/urn:li:activity:7467520839064825856/" target="_blank" rel="noopener">LinkedIn ↗</a>
+        <a href="https://whatsapp.com/channel/0029Vb7zFMuF1YlIjdPKZg07" target="_blank" rel="noopener">WhatsApp Channel ↗</a>
+        <a href="https://www.google.com/maps/place/Aakash-systemcraft-portfolio/@19.6922828,61.0418276,4z/data=!3m1!4b1!4m6!3m5!1s0x390dab0bb85078cd:0x8993cab96851ff44!8m2!3d21.0680074!4d82.7525294!16s%2Fg%2F11z6tk5y16" target="_blank" rel="noopener">Google Maps ↗</a>
+      </div>
+    </div>
+    <form class="lead" id="leadForm" novalidate>
+      <h3>Free demo request</h3>
+      <div class="f2">
+        <label class="fl" for="lName">Aapka naam *<input class="inp" id="lName" required placeholder="Rajesh Gupta" style="font-family:var(--body)"></label>
+        <label class="fl" for="lPhone">Mobile *<input class="inp" id="lPhone" required inputmode="tel" placeholder="98xxxxxxxx"></label>
+      </div>
+      <div class="f2">
+        <label class="fl" for="lBiz">Business / company<input class="inp" id="lBiz" placeholder="Gupta Traders" style="font-family:var(--body)"></label>
+        <label class="fl" for="lCity">City<input class="inp" id="lCity" placeholder="Delhi" style="font-family:var(--body)"></label>
+      </div>
+      <label class="fl" for="lEmail">Email (optional)<input class="inp" id="lEmail" type="email" placeholder="you@company.com" style="font-family:var(--body)"></label>
+      <fieldset style="border:0;padding:0;margin:0;display:grid;gap:8px">
+        <legend class="fl" style="font-size:13px;font-weight:600;margin-bottom:8px">Kya chahiye?</legend>
+        <div class="needs">
+          <label><input type="checkbox" id="n1" value="Inventory + Barcode">Inventory + Barcode</label>
+          <label><input type="checkbox" id="n2" value="Order to Dispatch">Order to Dispatch</label>
+          <label><input type="checkbox" id="n3" value="Purchase / PO">Purchase / PO</label>
+          <label><input type="checkbox" id="n4" value="MIS Dashboard">MIS Dashboard</label>
+          <label><input type="checkbox" id="n5" value="Full ERP">Full ERP</label>
+          <label><input type="checkbox" id="n6" value="Website">Website</label>
+        </div>
+      </fieldset>
+      <label class="fl" for="lMsg">Problem short mein (optional)<textarea class="inp" id="lMsg" placeholder="Stock ka hisaab nahi milta, orders miss ho jaate hain…"></textarea></label>
+      <p class="err-msg" id="lErr" hidden>Naam aur 10 digit mobile number zaroori hai.</p>
+      <button class="btn btn-primary" type="submit" id="lBtn" style="justify-content:center">Free Demo Book Karo →</button>
+      <div class="form-out" id="lOut" hidden></div>
+    </form>
+  </div>
+</section>
+
+<footer><div class="wrap"><span>© 2026 Aakash SystemCraft · Freelance ERP &amp; Business Automation Services</span><span>Built on Google Workspace · Delhi NCR · Pan-India remote</span></div></footer>
+
+<a class="wa-float" href="https://wa.me/918929831248?text=Hi%20Aakash%2C%20mujhe%20business%20automation%20ka%20free%20demo%20chahiye." target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg>
+  <span>WhatsApp</span>
+</a>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const inr=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const WA='918929831248';
+/* Apps Script Web App URL — lead form + portfolio dono isi se chalte hain */
+const SHEET_URL='PASTE_YOUR_WEB_APP_URL_HERE';
+
+/* ---------- HERO scanner ---------- */
+function drawBars(code){
+  const el=$('#heroBars');el.innerHTML='';
+  let seed=0;for(const c of code)seed=(seed*31+c.charCodeAt(0))%9973;
+  const w=[];for(let i=0;i<58;i++){seed=(seed*7919+13)%10007;w.push(1+seed%4)}
+  w.forEach((x,i)=>{const b=document.createElement('i');b.style.width=x+'px';b.style.marginRight=(1+(x*i)%3)+'px';if(i%2)b.style.background='transparent';el.appendChild(b)});
+}
+const heroItems=[
+  ['8901234500011','in','LED Panel 18W','+40'],
+  ['8901234500042','out','Copper Wire 1.5 mm','−12'],
+  ['8901234500028','alert','MCB 32A · 20% left','REORDER'],
+  ['8901234500035','in','PVC Pipe 1 inch','+60'],
+  ['8901234500059','out','Steel Fan Motor','−5'],
+];
+let hi=0;
+function heroTick(){
+  const [code,t,name,q]=heroItems[hi%heroItems.length];hi++;
+  $('#heroCode').textContent=code;drawBars(code);
+  const li=document.createElement('li');li.className='new';
+  li.innerHTML=`<span class="tag ${t}">${t==='in'?'IN':t==='out'?'OUT':'ALERT'}</span><span>${name}</span><span class="q num">${q}</span>`;
+  const log=$('#heroLog');log.prepend(li);while(log.children.length>3)log.lastChild.remove();
+}
+for(let i=0;i<3;i++)heroTick();
+if(!reduce)setInterval(heroTick,2600);
+function clock(){const d=new Date();$('#clock').textContent=d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}
+clock();setInterval(clock,30000);
+
+/* ---------- SLIDER ---------- */
+const slides=[
+  {code:'MODULE 01 · IMS',t:'Inventory with barcode scan',pain:'Godown mein kitna maal hai, ye jaanne ke liye ab kisi ko phone nahi karna padega.',pts:['Scan IN / scan OUT, stock live update','Godown-wise aur size/colour-wise stock','20% danger zone par auto reorder alert'],link:'https://script.google.com/macros/s/AKfycbz3naZPuGx5xMQz4Pxs1Yz4NG6d3VHrjQtIHMaZ6FFokDUvLUZ18RTptZ3Zaoqxaw_O3Q/exec',
+   vis:{h:['Stock','Live'],rows:[['LED Panel 18W',78,'ok','OK'],['Copper Wire 1.5 mm',34,'warn','LOW'],['MCB 32A',14,'crit','REORDER']]}},
+  {code:'MODULE 02 · O2D',t:'Order to Dispatch tracking',pain:'Har order ka status ek jagah. Kaunsa pack hua, kaunsa nikla, kaunsa late hai.',pts:['Order entry form with auto SO number','Stage-wise TAT and delay flag','Partial dispatch and balance qty'],link:'https://script.google.com/macros/s/AKfycbwHrvJLiBzUoLuOgWpDdQRDyjil0wZo2OEFDQ__8YoDZhxjS3vDnxw1eQFX64lXTvVwaw/exec?page=order_form',
+   vis:{h:['Orders','Today'],rows:[['SO-0541 · Gupta Traders',100,'ok','DISPATCHED'],['SO-0542 · Verma Electricals',60,'info','PACKING'],['SO-0538 · Sharma Agencies',30,'crit','LATE 2D']]}},
+  {code:'MODULE 03 · PO',t:'Purchase & material receiving',pain:'Kitna maal mangwana hai, kitna aaya, kitna baaki. Supplier follow-up list apne aap.',pts:['Minimum stock se requirement auto','PO-wise received vs balance','Pending PO follow-up reminders'],link:'https://script.google.com/macros/s/AKfycbyocbF8nj-vOM1otMVrEeIwZ4M-Zi2m2hQaWsknSlLv2hHxzPFdZgB3u_MsYOpGdmNx/exec?page=po_management',
+   vis:{h:['PO balance','Supplier'],rows:[['PO-1021 · 500 pcs',100,'ok','RECEIVED'],['PO-1022 · 320 pcs',45,'warn','145 BAL'],['PO-1023 · 200 pcs',0,'info','ORDERED']]}},
+  {code:'MODULE 04 · FMS',t:'Flow & delegation',pain:'Kaam ek bande se doosre tak bina bhoole pahunche. Delay ho to owner ko pata chale.',pts:['Sales → Purchase → Accounts handover','Har person ki daily pending list','Overdue task par WhatsApp alert'],link:'https://script.google.com/macros/s/AKfycbxMWuT3yAo-uGpPS6WMCuRjefhXW6A6piPCds_-fPCQLJIep126grbLv7gPZm0g5bTJpw/exec',
+   vis:{h:['Tasks','Team'],rows:[['Payment follow-up · Accounts',100,'ok','DONE'],['Quote to client · Sales',50,'info','TODAY'],['Supplier call · Purchase',20,'crit','OVERDUE']]}},
+  {code:'MODULE 05 · MIS',t:'Owner dashboard',pain:'Sales, stock, collection aur profit. Subah chai ke saath phone par ek screen.',pts:['Daily / monthly sales trend','Top customers and top products','Collection pending and ageing'],link:'https://script.google.com/macros/s/AKfycbzOIIzviaY3p1dsf5BZKPie8xskcbia39B-s0jd1DQh8QiWrpgF3KZOHhxwIkgx1hq6/exec?page=userdashboard',
+   vis:{h:['This month','vs last'],rows:[['Sales ₹18.4 L',82,'ok','+12%'],['Collection ₹14.1 L',64,'warn','−4%'],['Stock value ₹22.7 L',70,'info','STEADY']]}},
+  {code:'MODULE 06 · HR',t:'Team & scorecards',pain:'Joining se exit tak record, aur har bande ka kaam numbers mein.',pts:['New joiner / exit forms','Leave cover buddy system','Weekly performance scorecard'],link:'https://script.google.com/macros/s/AKfycbzTrDDPMmDimI4Lat5gjHyBQHAS4eMxOAD8BC0PCQgU2rN5gwPIiqAsPsBiAjdhWLSL/exec',
+   vis:{h:['Scorecard','Week'],rows:[['Sales team',91,'ok','91%'],['Dispatch team',76,'warn','76%'],['Purchase team',58,'crit','58%']]}},
+];
+const colorOf={ok:'var(--ok)',warn:'var(--warn)',crit:'var(--crit)',info:'var(--accent)'};
+const track=$('#track'),dots=$('#dots');
+slides.forEach((s,i)=>{
+  const el=document.createElement('article');el.className='slide';el.setAttribute('role','group');el.setAttribute('aria-roledescription','slide');el.setAttribute('aria-label',`${i+1} of ${slides.length}: ${s.t}`);
+  el.innerHTML=`<div class="slide-text"><span class="slide-code">${s.code}</span><h3>${s.t}</h3><p class="pain">${s.pain}</p><ul>${s.pts.map(p=>`<li>${p}</li>`).join('')}</ul><a class="more" href="${s.link}" target="_blank" rel="noopener" tabindex="-1">Live app dekho ↗</a></div>
+  <div class="slide-vis"><div class="screen"><div class="screen-h"><span>${s.vis.h[0]}</span><span>${s.vis.h[1]}</span></div>${s.vis.rows.map(r=>`<div class="row"><div><div>${r[0]}</div><div class="meter"><i style="width:${r[1]}%;background:${colorOf[r[2]]}"></i></div></div><span class="pill ${r[2]}">${r[3]}</span></div>`).join('')}</div></div>`;
+  track.appendChild(el);
+  const d=document.createElement('button');d.type='button';d.setAttribute('role','tab');d.setAttribute('aria-label',s.t);d.onclick=()=>{go(i);restart()};dots.appendChild(d);
+});
+let cur=0,timer=null;
+function go(i){
+  cur=(i+slides.length)%slides.length;track.style.transform=`translateX(-${cur*100}%)`;
+  [...dots.children].forEach((d,j)=>d.setAttribute('aria-current',j===cur));
+  [...track.children].forEach((s,j)=>{s.setAttribute('aria-hidden',j!==cur);s.querySelector('a').tabIndex=j===cur?0:-1});
+}
+function restart(){clearInterval(timer);if(!reduce)timer=setInterval(()=>go(cur+1),5500)}
+$('#prev').onclick=()=>{go(cur-1);restart()};$('#next').onclick=()=>{go(cur+1);restart()};
+const sl=$('#slider');sl.addEventListener('mouseenter',()=>clearInterval(timer));sl.addEventListener('mouseleave',restart);
+sl.addEventListener('focusin',()=>clearInterval(timer));
+let sx=null;const vp=$('#viewport');
+vp.addEventListener('pointerdown',e=>{sx=e.clientX});
+vp.addEventListener('pointerup',e=>{if(sx===null)return;const dx=e.clientX-sx;if(Math.abs(dx)>45){go(cur+(dx<0?1:-1));restart()}sx=null});
+go(0);restart();
+
+/* ---------- INVENTORY DEMO ---------- */
+const seed=()=>[
+  {code:'8901234500011',name:'LED Panel 18W · Cool White',stock:150,max:200,rate:420},
+  {code:'8901234500028',name:'MCB 32A · Double Pole',stock:46,max:120,rate:380},
+  {code:'8901234500035',name:'PVC Pipe 1 inch · 3 m length',stock:210,max:300,rate:180},
+  {code:'8901234500042',name:'Copper Wire 1.5 mm · 90 m coil',stock:70,max:250,rate:1650},
+  {code:'8901234500059',name:'Ceiling Fan Motor · 1200 mm',stock:38,max:60,rate:1900},
+  {code:'8901234500066',name:'Cable Tie Pack · 100 pcs',stock:120,max:150,rate:60},
+];
+let inv=seed(),mode='in',moves=0,alerts=[],log=[],lastCode=null;
+const status=it=>{const p=it.stock/it.max;return p<=.2?['crit','REORDER']:p<=.4?['warn','LOW']:['ok','OK']};
+const now=()=>new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+function render(){
+  $('#inv').innerHTML=inv.map(it=>{const [c,l]=status(it);const p=Math.min(100,it.stock/it.max*100);
+    return `<tr${it.code===lastCode?' class="flashrow"':''}><td><div>${it.name}</div><div class="sku">${it.code}</div></td>
+    <td class="stockc"><div class="stock-line num"><span>${it.stock}</span><span style="color:var(--muted)">/ ${it.max}</span></div><div class="meter"><i style="width:${p}%;background:${colorOf[c]}"></i></div></td>
+    <td><span class="pill ${c}">${l}</span></td><td class="num" style="text-align:right">${inr(it.stock*it.rate)}</td></tr>`}).join('');
+  $('#kSku').textContent=inv.length;
+  $('#kVal').textContent=inr(inv.reduce((a,b)=>a+b.stock*b.rate,0));
+  $('#kAlert').textContent=inv.filter(i=>status(i)[0]==='crit').length;
+  $('#kMov').textContent=moves;
+  $('#alerts').innerHTML=alerts.length?alerts.map(a=>`<li><time>${a.t}</time><span class="pill ${a.c}">${a.l}</span><span>${a.m}</span></li>`).join(''):'<li style="color:var(--muted)">Koi alert nahi. Stock OUT karke 20% se neeche le jao.</li>';
+  $('#moves').innerHTML=log.length?log.map(a=>`<li><time>${a.t}</time><span class="tag ${a.k}" style="background:${a.k==='in'?'var(--ok-soft)':'var(--accent-soft)'};color:${a.k==='in'?'var(--ok)':'var(--accent)'}">${a.k.toUpperCase()}</span><span>${a.m}</span></li>`).join(''):'<li style="color:var(--muted)">Abhi tak koi scan nahi.</li>';
+}
+function flash(msg,cls){const f=$('#flash');f.className='flash '+cls;f.textContent=msg}
+function scan(code){
+  code=code.trim();const q=parseInt($('#qty').value,10);
+  if(!code){flash('Barcode khaali hai. Scan karo ya type karo.','err');return}
+  if(!(q>0)){flash('Qty 1 ya usse zyada honi chahiye.','err');return}
+  const it=inv.find(i=>i.code===code);
+  if(!it){flash(`Barcode ${code} system mein nahi mila. Real system mein yahin se naya product add hota hai.`,'err');return}
+  if(mode==='out'&&q>it.stock){flash(`Sirf ${it.stock} stock hai. ${q} dispatch nahi ho sakta. System galat entry rok deta hai.`,'err');return}
+  const before=status(it)[0];
+  it.stock+=mode==='in'?q:-q;moves++;lastCode=code;
+  log.unshift({t:now(),k:mode,m:`${it.name.split('·')[0].trim()} ${mode==='in'?'+':'−'}${q} → ${it.stock}`});log=log.slice(0,12);
+  const after=status(it);
+  if(after[0]!==before&&after[0]!=='ok'){alerts.unshift({t:now(),c:after[0],l:after[1],m:`${it.name.split('·')[0].trim()}: sirf ${it.stock} bacha (${Math.round(it.stock/it.max*100)}%). ${after[0]==='crit'?'PO raise karo.':'Dhyaan do.'}`})}
+  if(after[0]==='ok'&&before!=='ok'){alerts.unshift({t:now(),c:'ok',l:'CLEARED',m:`${it.name.split('·')[0].trim()} stock wapas safe level par.`})}
+  alerts=alerts.slice(0,10);
+  flash(`✓ ${mode==='in'?'Received':'Dispatched'} ${q} × ${it.name.split('·')[0].trim()}. New stock: ${it.stock}`,'ok');
+  render();
+}
+inv.forEach(it=>{const b=document.createElement('button');b.type='button';b.textContent='…'+it.code.slice(-5);b.title=it.name;b.onclick=()=>{$('#code').value=it.code;scan(it.code)};$('#chips').appendChild(b)});
+$('#scanForm').addEventListener('submit',e=>{e.preventDefault();scan($('#code').value);$('#code').select()});
+$('#qty').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();scan($('#code').value)}});
+function setMode(m){mode=m;$('#mIn').setAttribute('aria-pressed',m==='in');$('#mOut').setAttribute('aria-pressed',m==='out')}
+$('#mIn').onclick=()=>setMode('in');$('#mOut').onclick=()=>setMode('out');
+$('#reset').onclick=()=>{inv=seed();moves=0;alerts=[];log=[];lastCode=null;flash('Demo reset ho gaya.','idle');render()};
+setMode('out');render();setMode('in');
+
+/* ---------- COPY ---------- */
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',()=>{
+  const v=b.dataset.copy;const done=()=>{b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1500)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(v).then(done).catch(()=>sel(b))}else sel(b);
+}));
+function sel(b){const t=b.parentElement.querySelector('b');const r=document.createRange();r.selectNodeContents(t);const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Ctrl+C dabao'}
+
+
+/* ---------- PORTFOLIO FROM SHEET ("Website Portfolio" tab) ---------- */
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safe=u=>/^https?:\/\//i.test(String(u||'').trim())?String(u).trim():'';
+function ytId(u){const m=String(u).match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/);return m?m[1]:null}
+function driveId(u){const m=String(u).match(/\/d\/([\w-]{20,})|[?&]id=([\w-]{20,})/);return m?(m[1]||m[2]):null}
+function thumbOf(it){
+  const img=safe(it.image);
+  if(img){const d=driveId(img);return d?`https://drive.google.com/thumbnail?id=${d}&sz=w800`:img}
+  const y=ytId(it.link);if(y)return `https://img.youtube.com/vi/${y}/hqdefault.jpg`;
+  if(/video/i.test(it.type)){const d=driveId(it.link);if(d)return `https://drive.google.com/thumbnail?id=${d}&sz=w800`}
+  return '';
+}
+function renderPortfolio(items){
+  const media=items.filter(it=>/video|image/i.test(it.type)||safe(it.image));
+  const links=items.filter(it=>!media.includes(it)&&safe(it.link));
+  if(links.length){
+    const groups={};links.forEach(it=>{(groups[it.category||'More work']??=[]).push(it)});
+    $('#workGroups').innerHTML=Object.entries(groups).map(([cat,list])=>`<div class="wgroup"><h3>${esc(cat)}</h3><div class="wlinks">${
+      list.map(it=>`<a href="${esc(safe(it.link))}" target="_blank" rel="noopener"${it.desc?` title="${esc(it.desc)}"`:''}>${esc(it.title)}</a>`).join('')}</div></div>`).join('');
+  }
+  if(media.length){
+    $('#gallery').innerHTML=media.map(it=>{
+      const th=thumbOf(it),href=safe(it.link)||safe(it.image),isVid=/video/i.test(it.type)||ytId(it.link);
+      const inner=`<div class="gthumb">${th?`<img src="${esc(th)}" alt="${esc(it.title)}" loading="lazy" onerror="this.remove()">`:''}${th?'':`<span class="ph">${esc((it.title||'').slice(0,18))}</span>`}${isVid?'<span class="play" aria-hidden="true"></span>':''}</div>
+        <div class="gbody"><span class="pill info">${esc(it.type||'Work')}</span><b>${esc(it.title)}</b>${it.desc?`<p>${esc(it.desc)}</p>`:''}</div>`;
+      return href?`<a class="gcard" href="${esc(href)}" target="_blank" rel="noopener">${inner}</a>`:`<div class="gcard">${inner}</div>`;
+    }).join('');
+    $('#showcase').hidden=false;
+  }
+}
+async function loadPortfolio(){
+  if(!SHEET_URL.startsWith('https://'))return;
+  try{const r=await fetch(SHEET_URL+'?action=portfolio');const d=await r.json();if(d&&d.ok&&Array.isArray(d.items)&&d.items.length)renderPortfolio(d.items)}catch(e){/* sheet na mile to purana portfolio dikhta rahega */}
+}
+loadPortfolio();
+
+/* ---------- LEAD FORM ----------
+   SHEET_URL = Apps Script Web App URL (Deploy > New deployment > Web app). Form data "Received data" tab mein jayega. */
+$('#leadForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const name=$('#lName').value.trim(),phone=$('#lPhone').value.replace(/\D/g,'');
+  if(!name||phone.length<10){$('#lErr').hidden=false;return}
+  $('#lErr').hidden=true;
+  const needs=[...document.querySelectorAll('.needs input:checked')].map(i=>i.value).join(', ')||'Not sure yet';
+  const data={name,phone,email:$('#lEmail').value.trim(),business:$('#lBiz').value.trim(),city:$('#lCity').value.trim(),services:needs,message:$('#lMsg').value.trim(),source:location.hostname||'website'};
+  const msg=`Hi Aakash, free demo chahiye.\nNaam: ${name}\nMobile: ${phone}\nBusiness: ${data.business||'-'}\nCity: ${data.city||'-'}\nNeed: ${needs}\nProblem: ${data.message||'-'}`;
+  const wa=`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
+  const out=$('#lOut'),btn=$('#lBtn');btn.disabled=true;btn.textContent='Bhej rahe hain…';
+  let saved=false;
+  if(SHEET_URL.startsWith('https://')){
+    try{await fetch(SHEET_URL,{method:'POST',mode:'no-cors',body:new URLSearchParams(data)});saved=true}catch(err){saved=false}
+  }
+  out.hidden=false;
+  out.innerHTML=saved
+    ?`✓ Thank you ${name}! Request mil gayi. 24 ghante ke andar call aayega. Jaldi chahiye to <a href="${wa}" target="_blank" rel="noopener">WhatsApp karo ↗</a>`
+    :`Details ready hain. <a href="${wa}" target="_blank" rel="noopener">WhatsApp kholke Send dabao ↗</a> — ya +91 89298 31248 par call karo.`;
+  if(saved)$('#leadForm').reset();
+  btn.disabled=false;btn.textContent='Free Demo Book Karo →';
+});
+})();
+</script>
